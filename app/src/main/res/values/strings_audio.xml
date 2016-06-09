@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="audio_hint_file">Browse file</string>
+
+    <string name="audio_error_dialog_title">Error</string>
+    <string name="audio_error_dialog_message">Cannot play.</string>
+    <string name="audio_error_dialog_neutral">Close</string>
+
+</resources>

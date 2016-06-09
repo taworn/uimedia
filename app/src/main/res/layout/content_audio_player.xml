@@ -31,6 +31,12 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_folder_open_black_24dp"/>
 
+        <ImageButton
+            android:id="@+id/button_open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_play_arrow_black_24dp"/>
+
     </LinearLayout>
 
     <ImageView
@@ -38,53 +44,11 @@
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
-    <LinearLayout
+    <fragment
+        android:id="@+id/fragment_media"
+        android:name="diy.uimedia.MediaPlayerFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/material_margin_sub"
-        android:layout_marginTop="@dimen/material_margin"
-        android:orientation="vertical">
-
-        <SeekBar
-            android:id="@+id/seek_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/button_fast_rewind"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onFastRewindClick"
-            android:src="@drawable/ic_fast_rewind_black_24dp"/>
-
-        <ImageButton
-            android:id="@+id/button_play"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onPlayClick"
-            android:src="@drawable/ic_play_arrow_black_24dp"/>
-
-        <ImageButton
-            android:id="@+id/button_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onStopClick"
-            android:src="@drawable/ic_stop_black_24dp"/>
-
-        <ImageButton
-            android:id="@+id/button_fast_forward"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onFastForwardClick"
-            android:src="@drawable/ic_fast_forward_black_24dp"/>
-
-    </LinearLayout>
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_media_player"/>
 
 </LinearLayout>

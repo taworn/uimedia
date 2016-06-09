@@ -1,22 +1,15 @@
 package diy.uimedia;
 
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.SeekBar;
-
-import java.io.IOException;
 
 public class AudioPlayerActivity extends AppCompatActivity {
 
@@ -26,27 +19,8 @@ public class AudioPlayerActivity extends AppCompatActivity {
 
     private EditText editFile;
     private ImageButton buttonFile;
-    private ImageButton buttonPlay;
-    private ImageButton buttonStop;
-    private ImageButton buttonFastRewind;
-    private ImageButton buttonFastForward;
-    private SeekBar seekBar;
-
-    private boolean played = false;
-    private boolean paused = false;
-    private int pauseLength = 0;
-    private MediaPlayer mediaPlayer = null;
-    private Handler mediaHandler = new Handler();
-    private Runnable mediaRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (mediaPlayer != null) {
-                int t = mediaPlayer.getCurrentPosition();
-                seekBar.setProgress(t);
-                mediaHandler.postDelayed(mediaRunnable, 1000);
-            }
-        }
-    };
+    private ImageButton buttonOpen;
+    private MediaPlayerFragment fragmentMedia;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,11 +34,8 @@ public class AudioPlayerActivity extends AppCompatActivity {
 
         editFile = (EditText) findViewById(R.id.edit_file);
         buttonFile = (ImageButton) findViewById(R.id.button_file);
-        buttonPlay = (ImageButton) findViewById(R.id.button_play);
-        buttonStop = (ImageButton) findViewById(R.id.button_stop);
-        buttonFastRewind = (ImageButton) findViewById(R.id.button_fast_rewind);
-        buttonFastForward = (ImageButton) findViewById(R.id.button_fast_forward);
-        seekBar = (SeekBar) findViewById(R.id.seek_bar);
+        buttonOpen = (ImageButton) findViewById(R.id.button_open);
+        fragmentMedia = (MediaPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_media);
 
         buttonFile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,57 +47,18 @@ public class AudioPlayerActivity extends AppCompatActivity {
                 startActivityForResult(Intent.createChooser(intent, "Select New Audio"), BROWSE_FILE);
             }
         });
-
-        if (savedInstanceState == null) {
-            Log.d(TAG, "onCreate without savedInstanceState");
-        }
-        else {
-            editFile.setText(savedInstanceState.getString("editFileText"));
-            played = savedInstanceState.getBoolean("played");
-            paused = savedInstanceState.getBoolean("paused");
-            pauseLength = savedInstanceState.getInt("pauseLength");
-            if (!played) {
-                Log.d(TAG, "onCreate with savedInstanceState, played == false");
+        buttonOpen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fragmentMedia.open(editFile.getText().toString());
             }
-            else {
-                Log.d(TAG, "onCreate with savedInstanceState, played == true");
-                if (startMediaPlayer()) {
-                    mediaPlayer.seekTo(pauseLength);
-                    if (paused)
-                        mediaPlayer.pause();
-                }
-            }
-        }
-        setPlayEnabled();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mediaHandler.removeCallbacks(mediaRunnable);
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
-        }
+        });
     }
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString("editFileText", editFile.getText().toString());
-        savedInstanceState.putBoolean("played", played);
-        savedInstanceState.putBoolean("paused", paused);
-        savedInstanceState.putInt("pauseLength", played ? mediaPlayer.getCurrentPosition() : 0);
     }
 
     @Override
@@ -146,144 +78,6 @@ public class AudioPlayerActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public void onPlayClick(View view) {
-        if (!played) {
-            Log.d(TAG, "Play clicked, startMediaPlayer()");
-            if (startMediaPlayer()) {
-                played = true;
-                paused = false;
-                setPlayEnabled();
-            }
-        }
-        else {
-            if (!paused) {
-                Log.d(TAG, "Play clicked, !paused, set to paused");
-                mediaPlayer.pause();
-                pauseLength = mediaPlayer.getCurrentPosition();
-                paused = true;
-                setPlayEnabled();
-            }
-            else {
-                Log.d(TAG, "Play clicked, paused, set to !paused");
-                mediaPlayer.seekTo(pauseLength);
-                mediaPlayer.start();
-                paused = false;
-                setPlayEnabled();
-            }
-        }
-    }
-
-    public void onStopClick(View view) {
-        Log.d(TAG, "Stop clicked");
-        if (played) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-            pauseLength = 0;
-            paused = false;
-            played = false;
-            setPlayEnabled();
-        }
-    }
-
-    public void onFastRewindClick(View view) {
-        Log.d(TAG, "Fast Rewind clicked");
-        if (played) {
-            int t = mediaPlayer.getCurrentPosition();
-            t -= 10000;
-            if (t < 0)
-                t = 0;
-            pauseLength = t;
-            mediaPlayer.seekTo(t);
-        }
-    }
-
-    public void onFastForwardClick(View view) {
-        Log.d(TAG, "Fast Forward clicked");
-        if (played) {
-            int t = mediaPlayer.getCurrentPosition();
-            t += 10000;
-            int end = mediaPlayer.getDuration();
-            if (t > end)
-                t = end;
-            pauseLength = t;
-            mediaPlayer.seekTo(t);
-        }
-    }
-
-    private void setPlayEnabled() {
-        if (!played) {
-            editFile.setEnabled(true);
-            buttonFile.setEnabled(true);
-            buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-            buttonStop.setEnabled(false);
-            buttonFastRewind.setEnabled(false);
-            buttonFastForward.setEnabled(false);
-            seekBar.setEnabled(false);
-        }
-        else {
-            editFile.setEnabled(false);
-            buttonFile.setEnabled(false);
-            if (!paused)
-                buttonPlay.setImageResource(R.drawable.ic_pause_black_24dp);
-            else
-                buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-            buttonStop.setEnabled(true);
-            buttonFastRewind.setEnabled(true);
-            buttonFastForward.setEnabled(true);
-            seekBar.setEnabled(true);
-        }
-    }
-
-    private boolean startMediaPlayer() {
-        if (!editFile.getText().toString().equals("")) {
-            try {
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer player) {
-                        Log.d(TAG, "MediaPlayer.onCompletion()");
-                        onStopClick(null);
-                    }
-                });
-                mediaPlayer.setDataSource(editFile.getText().toString());
-                mediaPlayer.prepare();
-                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                        if (mediaPlayer != null && b) {
-                            pauseLength = i;
-                            mediaPlayer.seekTo(i);
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                    }
-                });
-                seekBar.setMax(mediaPlayer.getDuration());
-                seekBar.setProgress(0);
-                mediaPlayer.seekTo(pauseLength);
-                mediaPlayer.start();
-                mediaHandler.postDelayed(mediaRunnable, 0);
-                return true;
-            }
-            catch (IOException e) {
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.audio_error_dialog_title)
-                        .setMessage(R.string.audio_error_dialog_message)
-                        .setNeutralButton(R.string.audio_error_dialog_neutral, null)
-                        .show();
-                mediaPlayer = null;
-            }
-        }
-        return false;
     }
 
 }

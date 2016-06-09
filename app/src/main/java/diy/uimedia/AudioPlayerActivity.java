@@ -4,13 +4,17 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 
 import java.io.IOException;
 
@@ -26,11 +30,23 @@ public class AudioPlayerActivity extends AppCompatActivity {
     private ImageButton buttonStop;
     private ImageButton buttonFastRewind;
     private ImageButton buttonFastForward;
+    private SeekBar seekBar;
 
     private boolean played = false;
     private boolean paused = false;
     private int pauseLength = 0;
     private MediaPlayer mediaPlayer = null;
+    private Handler mediaHandler = new Handler();
+    private Runnable mediaRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mediaPlayer != null) {
+                int t = mediaPlayer.getCurrentPosition();
+                seekBar.setProgress(t);
+                mediaHandler.postDelayed(mediaRunnable, 1000);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +54,9 @@ public class AudioPlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_audio_player);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(true);
 
         editFile = (EditText) findViewById(R.id.edit_file);
         buttonFile = (ImageButton) findViewById(R.id.button_file);
@@ -45,6 +64,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
         buttonStop = (ImageButton) findViewById(R.id.button_stop);
         buttonFastRewind = (ImageButton) findViewById(R.id.button_fast_rewind);
         buttonFastForward = (ImageButton) findViewById(R.id.button_fast_forward);
+        seekBar = (SeekBar) findViewById(R.id.seek_bar);
 
         buttonFile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,6 +113,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mediaHandler.removeCallbacks(mediaRunnable);
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -115,6 +136,16 @@ public class AudioPlayerActivity extends AppCompatActivity {
             Uri uri = resultIntent.getData();
             editFile.setText(uri.getPath());
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onPlayClick(View view) {
@@ -150,6 +181,8 @@ public class AudioPlayerActivity extends AppCompatActivity {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
+            pauseLength = 0;
+            paused = false;
             played = false;
             setPlayEnabled();
         }
@@ -157,10 +190,25 @@ public class AudioPlayerActivity extends AppCompatActivity {
 
     public void onFastRewindClick(View view) {
         Log.d(TAG, "Fast Rewind clicked");
+        if (played) {
+            int t = mediaPlayer.getCurrentPosition();
+            t -= 10000;
+            if (t < 0)
+                t = 0;
+            mediaPlayer.seekTo(t);
+        }
     }
 
     public void onFastForwardClick(View view) {
         Log.d(TAG, "Fast Forward clicked");
+        if (played) {
+            int t = mediaPlayer.getCurrentPosition();
+            t += 10000;
+            int end = mediaPlayer.getDuration();
+            if (t > end)
+                t = end;
+            mediaPlayer.seekTo(t);
+        }
     }
 
     private void setPlayEnabled() {
@@ -189,9 +237,37 @@ public class AudioPlayerActivity extends AppCompatActivity {
         if (!editFile.getText().toString().equals("")) {
             try {
                 mediaPlayer = new MediaPlayer();
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer player) {
+                        Log.d(TAG, "MediaPlayer.onCompletion()");
+                        onStopClick(null);
+                    }
+                });
                 mediaPlayer.setDataSource(editFile.getText().toString());
                 mediaPlayer.prepare();
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        if (mediaPlayer != null && b) {
+                            mediaPlayer.seekTo(i);
+                            pauseLength = mediaPlayer.getCurrentPosition();
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+                seekBar.setMax(mediaPlayer.getDuration());
+                seekBar.setProgress(0);
+                mediaPlayer.seekTo(pauseLength);
                 mediaPlayer.start();
+                mediaHandler.postDelayed(mediaRunnable, 0);
                 return true;
             }
             catch (IOException e) {

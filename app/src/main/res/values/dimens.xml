@@ -5,6 +5,7 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="material_margin">16dp</dimen>
+    <dimen name="material_margin_sub">8dp</dimen>
     <dimen name="material_margin_1st">16dp</dimen>
     <dimen name="material_margin_2nd">72dp</dimen>
     <dimen name="material_margin_end">16dp</dimen>

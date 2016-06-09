@@ -14,7 +14,7 @@
     <string name="about_dialog_message">UI Media, version</string>
     <string name="about_dialog_positive">Close</string>
 
-    <string name="version">0.0.1</string>
+    <string name="version">0.0.2</string>
 
     <string name="title_activity_audio_player">Audio Player</string>
 

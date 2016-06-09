@@ -38,6 +38,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="onAudioRecorderClick"
             android:text="@string/button_audio_recorder"/>
 
         <Button

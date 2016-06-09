@@ -3,10 +3,8 @@
     package="diy.uimedia"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission
-        android:name="android.permission.RECORD_AUDIO"/>
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -26,6 +24,11 @@
         <activity
             android:name=".AudioPlayerActivity"
             android:label="@string/title_activity_audio_player"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".AudioRecorderActivity"
+            android:label="@string/title_activity_audio_recorder"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>

@@ -195,6 +195,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
             t -= 10000;
             if (t < 0)
                 t = 0;
+            pauseLength = t;
             mediaPlayer.seekTo(t);
         }
     }
@@ -207,6 +208,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
             int end = mediaPlayer.getDuration();
             if (t > end)
                 t = end;
+            pauseLength = t;
             mediaPlayer.seekTo(t);
         }
     }
@@ -215,21 +217,23 @@ public class AudioPlayerActivity extends AppCompatActivity {
         if (!played) {
             editFile.setEnabled(true);
             buttonFile.setEnabled(true);
+            buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
             buttonStop.setEnabled(false);
             buttonFastRewind.setEnabled(false);
             buttonFastForward.setEnabled(false);
-            buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+            seekBar.setEnabled(false);
         }
         else {
             editFile.setEnabled(false);
             buttonFile.setEnabled(false);
-            buttonStop.setEnabled(true);
-            buttonFastRewind.setEnabled(true);
-            buttonFastForward.setEnabled(true);
             if (!paused)
                 buttonPlay.setImageResource(R.drawable.ic_pause_black_24dp);
             else
                 buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+            buttonStop.setEnabled(true);
+            buttonFastRewind.setEnabled(true);
+            buttonFastForward.setEnabled(true);
+            seekBar.setEnabled(true);
         }
     }
 
@@ -250,8 +254,8 @@ public class AudioPlayerActivity extends AppCompatActivity {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                         if (mediaPlayer != null && b) {
+                            pauseLength = i;
                             mediaPlayer.seekTo(i);
-                            pauseLength = mediaPlayer.getCurrentPosition();
                         }
                     }
 

@@ -44,9 +44,15 @@ public class MediaPlayerFragment extends Fragment {
         @Override
         public void run() {
             if (player != null) {
-                int p = player.getCurrentPosition();
-                if (!paused)
+                int p = !paused ? player.getCurrentPosition() : position;
+                if (!paused) {
                     seekBar.setProgress(p);
+                }
+                else {
+                    int q = seekBar.getProgress();
+                    if (p != q)
+                        seekBar.setProgress(p);
+                }
                 handler.postDelayed(runnable, 1000);
             }
         }
@@ -114,7 +120,7 @@ public class MediaPlayerFragment extends Fragment {
         duration = 0;
         position = 0;
         deltaPosition = 10000;
-        looping = false;
+        looping = true;
         return view;
     }
 
@@ -211,8 +217,6 @@ public class MediaPlayerFragment extends Fragment {
     public void onStopClick(View view) {
         if (opened) {
             Log.d(TAG, "Stop clicked");
-            player.stop();
-            player.start();
             player.pause();
             paused = true;
             position = 0;
@@ -301,6 +305,11 @@ public class MediaPlayerFragment extends Fragment {
                 @Override
                 public void onCompletion(MediaPlayer player) {
                     Log.d(TAG, "MediaPlayer.onCompletion()");
+                    if (!looping) {
+                        player.pause();
+                        paused = true;
+                        setPlayEnabled();
+                    }
                 }
             });
             player.setDataSource(path);

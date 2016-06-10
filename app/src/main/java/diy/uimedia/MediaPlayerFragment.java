@@ -4,15 +4,17 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A media player fragment.
@@ -22,22 +24,25 @@ public class MediaPlayerFragment extends Fragment {
     private static final String TAG = MediaPlayerFragment.class.getSimpleName();
 
     private SeekBar seekBar;
+    private TextView textTimeCurrent;
+    private TextView textTime;
     private ImageButton buttonPlay;
     private ImageButton buttonStop;
     private ImageButton buttonFastRewind;
     private ImageButton buttonFastForward;
     private ImageButton buttonToStart;
     private ImageButton buttonToEnd;
+    private CheckBox checkLoop;
 
     private String path;
     private boolean opened;
 
-    private MediaPlayer player = null;
-    private boolean paused = false;
-    private int duration = 0;
-    private int position = 0;
-    private int deltaPosition = 10000;
-    private boolean looping = false;
+    private MediaPlayer player;
+    private boolean paused;
+    private int duration;
+    private int position;
+    private int deltaPosition;
+    private boolean looping;
 
     private Handler handler = new Handler();
     private Runnable runnable = new Runnable() {
@@ -46,14 +51,17 @@ public class MediaPlayerFragment extends Fragment {
             if (player != null) {
                 int p = !paused ? player.getCurrentPosition() : position;
                 if (!paused) {
+                    textTimeCurrent.setText(timeToText(p));
                     seekBar.setProgress(p);
                 }
                 else {
                     int q = seekBar.getProgress();
-                    if (p != q)
+                    if (p != q) {
+                        textTimeCurrent.setText(timeToText(p));
                         seekBar.setProgress(p);
+                    }
                 }
-                handler.postDelayed(runnable, 1000);
+                handler.postDelayed(runnable, 500);
             }
         }
     };
@@ -69,12 +77,15 @@ public class MediaPlayerFragment extends Fragment {
         Log.d(TAG, "onCreateView()");
 
         seekBar = (SeekBar) view.findViewById(R.id.seek_bar);
+        textTimeCurrent = (TextView) view.findViewById(R.id.text_time_current);
+        textTime = (TextView) view.findViewById(R.id.text_time);
         buttonPlay = (ImageButton) view.findViewById(R.id.button_play);
         buttonStop = (ImageButton) view.findViewById(R.id.button_stop);
         buttonFastRewind = (ImageButton) view.findViewById(R.id.button_fast_rewind);
         buttonFastForward = (ImageButton) view.findViewById(R.id.button_fast_forward);
         buttonToStart = (ImageButton) view.findViewById(R.id.button_to_start);
         buttonToEnd = (ImageButton) view.findViewById(R.id.button_to_end);
+        checkLoop = (CheckBox) view.findViewById(R.id.check_loop);
 
         buttonPlay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,6 +123,13 @@ public class MediaPlayerFragment extends Fragment {
                 onToEndClick(view);
             }
         });
+        checkLoop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean b = checkLoop.isChecked();
+                setLooping(b);
+            }
+        });
 
         path = null;
         opened = false;
@@ -119,8 +137,8 @@ public class MediaPlayerFragment extends Fragment {
         paused = false;
         duration = 0;
         position = 0;
-        deltaPosition = 10000;
-        looping = true;
+        deltaPosition = 15000;
+        looping = false;
         return view;
     }
 
@@ -165,6 +183,8 @@ public class MediaPlayerFragment extends Fragment {
                 if (start(path)) {
                     if (paused)
                         player.pause();
+                    player.setLooping(looping);
+                    textTimeCurrent.setText(timeToText(position));
                 }
             }
         }
@@ -191,11 +211,22 @@ public class MediaPlayerFragment extends Fragment {
             duration = 0;
             position = 0;
             seekBar.setProgress(0);
+            textTimeCurrent.setText(timeToText(0));
             setPlayEnabled();
         }
     }
 
-    public void onPlayClick(View view) {
+    public boolean isLooping() {
+        return looping;
+    }
+
+    public void setLooping(boolean b) {
+        looping = b;
+        if (player != null)
+            player.setLooping(looping);
+    }
+
+    private void onPlayClick(View view) {
         if (opened) {
             if (!paused) {
                 Log.d(TAG, "Play clicked, switch !paused to paused");
@@ -210,22 +241,24 @@ public class MediaPlayerFragment extends Fragment {
                 paused = false;
             }
             seekBar.setProgress(position);
+            textTimeCurrent.setText(timeToText(position));
             setPlayEnabled();
         }
     }
 
-    public void onStopClick(View view) {
+    private void onStopClick(View view) {
         if (opened) {
             Log.d(TAG, "Stop clicked");
             player.pause();
             paused = true;
             position = 0;
             seekBar.setProgress(0);
+            textTimeCurrent.setText(timeToText(0));
             setPlayEnabled();
         }
     }
 
-    public void onFastRewindClick(View view) {
+    private void onFastRewindClick(View view) {
         if (opened) {
             Log.d(TAG, "Fast Rewind clicked");
             int p = !paused ? player.getCurrentPosition() : position;
@@ -236,10 +269,11 @@ public class MediaPlayerFragment extends Fragment {
             if (!paused)
                 player.seekTo(p);
             seekBar.setProgress(p);
+            textTimeCurrent.setText(timeToText(p));
         }
     }
 
-    public void onFastForwardClick(View view) {
+    private void onFastForwardClick(View view) {
         if (opened) {
             Log.d(TAG, "Fast Forward clicked");
             int p = !paused ? player.getCurrentPosition() : position;
@@ -250,32 +284,38 @@ public class MediaPlayerFragment extends Fragment {
             if (!paused)
                 player.seekTo(p);
             seekBar.setProgress(p);
+            textTimeCurrent.setText(timeToText(p));
         }
     }
 
-    public void onToStartClick(View view) {
+    private void onToStartClick(View view) {
         if (opened) {
             Log.d(TAG, "To Start clicked");
             position = 0;
             if (!paused)
                 player.seekTo(0);
             seekBar.setProgress(0);
+            textTimeCurrent.setText(timeToText(0));
         }
     }
 
-    public void onToEndClick(View view) {
+    private void onToEndClick(View view) {
         if (opened) {
             Log.d(TAG, "To End clicked");
             position = duration - 1;
             if (!paused)
                 player.seekTo(duration - 1);
             seekBar.setProgress(duration - 1);
+            textTimeCurrent.setText(timeToText(duration - 1));
         }
     }
 
     private void setPlayEnabled() {
         if (!opened) {
             seekBar.setEnabled(false);
+            textTimeCurrent.setEnabled(false);
+            textTime.setEnabled(false);
+            textTime.setText("");
             buttonPlay.setImageResource(R.drawable.ic_play_arrow_black_24dp);
             buttonStop.setEnabled(false);
             buttonFastRewind.setEnabled(false);
@@ -285,6 +325,9 @@ public class MediaPlayerFragment extends Fragment {
         }
         else {
             seekBar.setEnabled(true);
+            textTimeCurrent.setEnabled(true);
+            textTime.setEnabled(true);
+            textTime.setText(timeToText(duration));
             if (!paused)
                 buttonPlay.setImageResource(R.drawable.ic_pause_black_24dp);
             else
@@ -314,8 +357,8 @@ public class MediaPlayerFragment extends Fragment {
             });
             player.setDataSource(path);
             player.prepare();
-
             duration = player.getDuration();
+
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -324,6 +367,7 @@ public class MediaPlayerFragment extends Fragment {
                             player.seekTo(i);
                         else
                             position = i;
+                        textTimeCurrent.setText(timeToText(i));
                     }
                 }
 
@@ -346,12 +390,6 @@ public class MediaPlayerFragment extends Fragment {
             return true;
         }
         catch (IOException e) {
-            new AlertDialog.Builder(getActivity())
-                    .setIcon(R.drawable.ic_error_black_24dp)
-                    .setTitle(R.string.audio_error_dialog_title)
-                    .setMessage(R.string.audio_error_dialog_message)
-                    .setNeutralButton(R.string.audio_error_dialog_neutral, null)
-                    .show();
             opened = false;
             player = null;
             paused = false;
@@ -359,6 +397,13 @@ public class MediaPlayerFragment extends Fragment {
             position = 0;
             return false;
         }
+    }
+
+    private static String timeToText(int t) {
+        int s = t / 1000;
+        int m = s / 60;
+        s %= 60;
+        return String.format(Locale.US, "%02d:%02d", m, s);
     }
 
 }

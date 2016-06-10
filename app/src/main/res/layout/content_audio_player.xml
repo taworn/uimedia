@@ -48,7 +48,7 @@
         android:id="@+id/fragment_media"
         android:name="diy.uimedia.MediaPlayerFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         tools:layout="@layout/fragment_media_player"/>
 
 </LinearLayout>

@@ -11,8 +11,19 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.coremedia.iso.boxes.Container;
+import com.googlecode.mp4parser.authoring.Movie;
+import com.googlecode.mp4parser.authoring.Track;
+import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
+import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
+import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.util.LinkedList;
+import java.util.List;
 
 public class AudioRecorderActivity extends AppCompatActivity {
 
@@ -70,6 +81,14 @@ public class AudioRecorderActivity extends AppCompatActivity {
     public void onButtonRecordClick(View view) {
         try {
             File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+
+            File fileA = new File(path, "A.m4a");
+            File fileB = new File(path, "B.m4a");
+            File fileC = new File(path, "C.m4a");
+
+            String[] files = {fileA.getPath(), fileB.getPath()};
+            appendFiles(fileC.getPath(), files);
+
             File file = File.createTempFile("uimedia-", ".tmp", path);
             if (file.canWrite()) {
                 String fileName = file.getPath();
@@ -92,6 +111,37 @@ public class AudioRecorderActivity extends AppCompatActivity {
             recorder.release();
             recorder = null;
         }
+    }
+
+    private void appendFiles(String resultFile, String[] files) throws IOException {
+        Movie[] movies = new Movie[files.length];
+
+        int index = 0;
+        for (String video : files) {
+            movies[index] = MovieCreator.build(video);
+            index++;
+        }
+        List<Track> audioTracks = new LinkedList<Track>();
+        //List<Track> videoTracks = new LinkedList<Track>();
+        for (Movie m : movies) {
+            for (Track t : m.getTracks()) {
+                if (t.getHandler().equals("soun"))
+                    audioTracks.add(t);
+                //if (t.getHandler().equals("vide"))
+                //videoTracks.add(t);
+            }
+        }
+
+        Movie result = new Movie();
+        if (audioTracks.size() > 0)
+            result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
+        //if (videoTracks.size() > 0)
+        //result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
+
+        Container out = new DefaultMp4Builder().build(result);
+        FileChannel fc = new RandomAccessFile(resultFile, "rw").getChannel();
+        out.writeContainer(fc);
+        fc.close();
     }
 
 }

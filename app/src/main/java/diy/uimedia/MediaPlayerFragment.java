@@ -37,6 +37,7 @@ public class MediaPlayerFragment extends Fragment {
     private int duration = 0;
     private int position = 0;
     private int deltaPosition = 10000;
+    private boolean looping = false;
 
     private Handler handler = new Handler();
     private Runnable runnable = new Runnable() {
@@ -44,7 +45,8 @@ public class MediaPlayerFragment extends Fragment {
         public void run() {
             if (player != null) {
                 int p = player.getCurrentPosition();
-                seekBar.setProgress(p);
+                if (!paused)
+                    seekBar.setProgress(p);
                 handler.postDelayed(runnable, 1000);
             }
         }
@@ -111,17 +113,9 @@ public class MediaPlayerFragment extends Fragment {
         paused = false;
         duration = 0;
         position = 0;
+        deltaPosition = 10000;
+        looping = false;
         return view;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     @Override
@@ -143,7 +137,10 @@ public class MediaPlayerFragment extends Fragment {
         savedInstanceState.putBoolean("opened", opened);
         savedInstanceState.putBoolean("paused", paused);
         savedInstanceState.putInt("duration", opened ? player.getDuration() : 0);
-        savedInstanceState.putInt("position", opened ? player.getCurrentPosition() : 0);
+        if (opened)
+            savedInstanceState.putInt("position", !paused ? player.getCurrentPosition() : position);
+        savedInstanceState.putInt("deltaPosition", deltaPosition);
+        savedInstanceState.putBoolean("looping", looping);
     }
 
     @Override
@@ -152,19 +149,20 @@ public class MediaPlayerFragment extends Fragment {
         Log.d(TAG, "onActivityCreated(), bundle == " + (savedInstanceState != null ? "ok" : "null"));
         if (savedInstanceState != null) {
             path = savedInstanceState.getString("path");
-            opened = savedInstanceState.getBoolean("opened");
+            boolean opened = savedInstanceState.getBoolean("opened");
             paused = savedInstanceState.getBoolean("paused");
             duration = savedInstanceState.getInt("duration");
-            position = savedInstanceState.getInt("position");
+            position = savedInstanceState.getInt("position", 0);
+            deltaPosition = savedInstanceState.getInt("deltaPosition");
+            looping = savedInstanceState.getBoolean("looping");
             if (opened) {
-                if (open(path)) {
-                    player.seekTo(position);
+                if (start(path)) {
                     if (paused)
                         player.pause();
                 }
             }
-            setPlayEnabled();
         }
+        setPlayEnabled();
     }
 
     public boolean isOpened() {
@@ -172,53 +170,9 @@ public class MediaPlayerFragment extends Fragment {
     }
 
     public boolean open(String path) {
-        try {
-            player = new MediaPlayer();
-            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer player) {
-                    Log.d(TAG, "MediaPlayer.onCompletion()");
-                    onStopClick(null);
-                }
-            });
-            player.setDataSource(path);
-            player.prepare();
-            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                    if (player != null && b) {
-                        position = i;
-                        player.seekTo(i);
-                    }
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                }
-            });
-            seekBar.setMax(player.getDuration());
-            seekBar.setProgress(0);
-            player.seekTo(position);
-            player.start();
-            handler.postDelayed(runnable, 0);
-            opened = true;
-            return true;
-        }
-        catch (IOException e) {
-            new AlertDialog.Builder(getActivity())
-                    .setIcon(R.drawable.ic_error_black_24dp)
-                    .setTitle(R.string.audio_error_dialog_title)
-                    .setMessage(R.string.audio_error_dialog_message)
-                    .setNeutralButton(R.string.audio_error_dialog_neutral, null)
-                    .show();
-            player = null;
-            opened = false;
-        }
-        return false;
+        boolean result = start(path);
+        setPlayEnabled();
+        return result;
     }
 
     public void close() {
@@ -230,6 +184,8 @@ public class MediaPlayerFragment extends Fragment {
             paused = false;
             duration = 0;
             position = 0;
+            seekBar.setProgress(0);
+            setPlayEnabled();
         }
     }
 
@@ -247,6 +203,7 @@ public class MediaPlayerFragment extends Fragment {
                 player.start();
                 paused = false;
             }
+            seekBar.setProgress(position);
             setPlayEnabled();
         }
     }
@@ -255,8 +212,11 @@ public class MediaPlayerFragment extends Fragment {
         if (opened) {
             Log.d(TAG, "Stop clicked");
             player.stop();
+            player.start();
+            player.pause();
             paused = true;
             position = 0;
+            seekBar.setProgress(0);
             setPlayEnabled();
         }
     }
@@ -264,32 +224,49 @@ public class MediaPlayerFragment extends Fragment {
     public void onFastRewindClick(View view) {
         if (opened) {
             Log.d(TAG, "Fast Rewind clicked");
-            int t = player.getCurrentPosition();
-            t -= deltaPosition;
-            if (t < 0)
-                t = 0;
-            position = t;
-            player.seekTo(t);
+            int p = !paused ? player.getCurrentPosition() : position;
+            p -= deltaPosition;
+            if (p < 0)
+                p = 0;
+            position = p;
+            if (!paused)
+                player.seekTo(p);
+            seekBar.setProgress(p);
         }
     }
 
     public void onFastForwardClick(View view) {
         if (opened) {
             Log.d(TAG, "Fast Forward clicked");
-            int t = player.getCurrentPosition();
-            t += deltaPosition;
-            int end = duration;
-            if (t > end)
-                t = end;
-            position = t;
-            player.seekTo(t);
+            int p = !paused ? player.getCurrentPosition() : position;
+            p += deltaPosition;
+            if (p >= duration)
+                p = duration - 1;
+            position = p;
+            if (!paused)
+                player.seekTo(p);
+            seekBar.setProgress(p);
         }
     }
 
     public void onToStartClick(View view) {
+        if (opened) {
+            Log.d(TAG, "To Start clicked");
+            position = 0;
+            if (!paused)
+                player.seekTo(0);
+            seekBar.setProgress(0);
+        }
     }
 
     public void onToEndClick(View view) {
+        if (opened) {
+            Log.d(TAG, "To End clicked");
+            position = duration - 1;
+            if (!paused)
+                player.seekTo(duration - 1);
+            seekBar.setProgress(duration - 1);
+        }
     }
 
     private void setPlayEnabled() {
@@ -313,6 +290,65 @@ public class MediaPlayerFragment extends Fragment {
             buttonFastForward.setEnabled(true);
             buttonToStart.setEnabled(true);
             buttonToEnd.setEnabled(true);
+        }
+    }
+
+    private boolean start(final String path) {
+        try {
+            player = new MediaPlayer();
+            player.setLooping(looping);
+            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer player) {
+                    Log.d(TAG, "MediaPlayer.onCompletion()");
+                }
+            });
+            player.setDataSource(path);
+            player.prepare();
+
+            duration = player.getDuration();
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                    if (player != null && b) {
+                        if (!paused)
+                            player.seekTo(i);
+                        else
+                            position = i;
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
+            });
+            seekBar.setMax(duration);
+            seekBar.setProgress(0);
+
+            player.seekTo(position);
+            player.start();
+            handler.postDelayed(runnable, 0);
+            this.path = path;
+            this.opened = true;
+            return true;
+        }
+        catch (IOException e) {
+            new AlertDialog.Builder(getActivity())
+                    .setIcon(R.drawable.ic_error_black_24dp)
+                    .setTitle(R.string.audio_error_dialog_title)
+                    .setMessage(R.string.audio_error_dialog_message)
+                    .setNeutralButton(R.string.audio_error_dialog_neutral, null)
+                    .show();
+            opened = false;
+            player = null;
+            paused = false;
+            duration = 0;
+            position = 0;
+            return false;
         }
     }
 

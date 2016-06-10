@@ -50,7 +50,10 @@ public class AudioPlayerActivity extends AppCompatActivity {
         buttonOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                fragmentMedia.open(editFile.getText().toString());
+                if (!fragmentMedia.isOpened())
+                    fragmentMedia.open(editFile.getText().toString());
+                else
+                    fragmentMedia.close();
             }
         });
     }
@@ -58,7 +61,6 @@ public class AudioPlayerActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putString("editFileText", editFile.getText().toString());
     }
 
     @Override

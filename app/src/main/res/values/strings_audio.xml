@@ -2,9 +2,29 @@
 <resources>
 
     <string name="audio_hint_file">Browse file</string>
+    <string name="audio_hint_browse">Browse</string>
+    <string name="audio_hint_open">Open/Close</string>
+
+    <string name="audio_text_use_intent">Use intent</string>
+    <string name="audio_text_hint">Recording&#8230;</string>
+
+    <string name="audio_player_browse">Select an audio</string>
+    <string name="audio_recorder_browse">Save to</string>
 
     <string name="audio_error_dialog_title">Error</string>
     <string name="audio_error_dialog_message">Cannot play.</string>
     <string name="audio_error_dialog_neutral">Close</string>
+
+    <string name="audio_warning_dialog_title">Warning</string>
+    <string name="audio_warning_dialog_message">Save to overwrite this file, are you sure?</string>
+    <string name="audio_warning_dialog_negative">No</string>
+    <string name="audio_warning_dialog_positive">Yes</string>
+
+    <string name="audio_question_dialog_title">Question</string>
+    <string name="audio_question_dialog_message">Overwrite or append file?</string>
+    <string name="audio_question_dialog_neutral">Overwrite</string>
+    <string name="audio_question_dialog_positive">Append</string>
+
+    <string name="audio_waiting">Appending file, please wait&#8230;</string>
 
 </resources>

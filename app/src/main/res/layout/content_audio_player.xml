@@ -29,12 +29,14 @@
             android:id="@+id/button_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/audio_hint_browse"
             android:src="@drawable/ic_folder_open_black_24dp"/>
 
         <ImageButton
             android:id="@+id/button_open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/audio_hint_open"
             android:src="@drawable/ic_play_arrow_black_24dp"/>
 
     </LinearLayout>

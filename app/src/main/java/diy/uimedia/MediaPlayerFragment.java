@@ -34,9 +34,11 @@ public class MediaPlayerFragment extends Fragment {
     private ImageButton buttonToEnd;
     private CheckBox checkLoop;
 
+    // open/close flag with path name
     private String path;
     private boolean opened;
 
+    // media player and properties
     private MediaPlayer player;
     private boolean paused;
     private int duration;
@@ -44,6 +46,7 @@ public class MediaPlayerFragment extends Fragment {
     private int deltaPosition;
     private boolean looping;
 
+    // handler to control seekbar and time
     private Handler handler = new Handler();
     private Runnable runnable = new Runnable() {
         @Override
@@ -198,6 +201,7 @@ public class MediaPlayerFragment extends Fragment {
     public boolean open(String path) {
         boolean result = start(path);
         setPlayEnabled();
+        Log.d(TAG, "open(), return " + result);
         return result;
     }
 
@@ -213,6 +217,7 @@ public class MediaPlayerFragment extends Fragment {
             seekBar.setProgress(0);
             textTimeCurrent.setText(timeToText(0));
             setPlayEnabled();
+            Log.d(TAG, "close()");
         }
     }
 
@@ -342,6 +347,7 @@ public class MediaPlayerFragment extends Fragment {
 
     private boolean start(final String path) {
         try {
+            Log.d(TAG, "initializes media player");
             player = new MediaPlayer();
             player.setLooping(looping);
             player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -359,6 +365,7 @@ public class MediaPlayerFragment extends Fragment {
             player.prepare();
             duration = player.getDuration();
 
+            Log.d(TAG, "initializes SeekBar");
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -382,6 +389,7 @@ public class MediaPlayerFragment extends Fragment {
             seekBar.setMax(duration);
             seekBar.setProgress(0);
 
+            Log.d(TAG, "start playing");
             player.seekTo(position);
             player.start();
             handler.postDelayed(runnable, 0);
@@ -390,6 +398,7 @@ public class MediaPlayerFragment extends Fragment {
             return true;
         }
         catch (IOException e) {
+            Log.d(TAG, "error, reset opened to false");
             opened = false;
             player = null;
             paused = false;

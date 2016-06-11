@@ -45,7 +45,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
                 intent.setType("audio/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Select An Audio"), BROWSE_FILE);
+                startActivityForResult(Intent.createChooser(intent, AudioPlayerActivity.this.getResources().getString(R.string.audio_player_browse)), BROWSE_FILE);
             }
         });
         buttonOpen.setOnClickListener(new View.OnClickListener() {
@@ -60,9 +60,13 @@ public class AudioPlayerActivity extends AppCompatActivity {
                                 .setNeutralButton(R.string.audio_error_dialog_neutral, null)
                                 .show();
                     }
+                    else
+                        buttonOpen.setImageResource(R.drawable.ic_stop_black_24dp);
                 }
-                else
+                else {
                     fragmentMedia.close();
+                    buttonOpen.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+                }
             }
         });
     }

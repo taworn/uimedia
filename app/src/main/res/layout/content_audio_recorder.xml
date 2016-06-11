@@ -22,6 +22,13 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fiber_manual_record_black_24dp"/>
 
+        <CheckBox
+            android:id="@+id/check_intent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/audio_text_use_intent"/>
+
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -40,6 +47,16 @@
             android:src="@drawable/ic_save_black_24dp"/>
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_mic_black_24dp"
+        android:drawableStart="@drawable/ic_mic_black_24dp"
+        android:drawableTint="@color/colorTint"
+        android:gravity="center_vertical"
+        android:text="@string/audio_text_hint"/>
 
     <ImageView
         android:layout_width="match_parent"

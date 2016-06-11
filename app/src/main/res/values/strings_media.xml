@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="fragment_media_loop">Loop</string>
+    <string name="fragment_media_hint_play">Play/Pause</string>
+    <string name="fragment_media_hint_stop">Stop</string>
+    <string name="fragment_media_hint_fast_rewind">Fast Rewind</string>
+    <string name="fragment_media_hint_fast_forward">Fast Forward</string>
+    <string name="fragment_media_hint_to_start">To Start</string>
+    <string name="fragment_media_hint_to_end">To End</string>
+    <string name="fragment_media_text_loop">Loop</string>
+    <string name="fragment_media_text_time_separator">/</string>
 </resources>

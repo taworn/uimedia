@@ -20,21 +20,31 @@
             android:id="@+id/button_record"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onButtonRecordClick"
             android:src="@drawable/ic_fiber_manual_record_black_24dp"/>
 
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
         <ImageButton
-            android:id="@+id/button_stop"
+            android:id="@+id/button_open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onButtonStopClick"
-            android:src="@drawable/ic_stop_black_24dp"/>
-
-        <TextView
-            android:id="@+id/text_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:src="@drawable/ic_play_arrow_black_24dp"/>
 
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <fragment
+        android:id="@+id/fragment_media"
+        android:name="diy.uimedia.MediaPlayerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_media_player"/>
 
 </LinearLayout>

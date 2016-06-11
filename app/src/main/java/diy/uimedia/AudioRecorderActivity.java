@@ -82,21 +82,23 @@ public class AudioRecorderActivity extends AppCompatActivity {
         buttonOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!fragmentMedia.isOpened()) {
-                    if (keepFileName != null && !fragmentMedia.open(keepFileName)) {
-                        new AlertDialog.Builder(AudioRecorderActivity.this)
-                                .setIcon(R.drawable.ic_error_black_24dp)
-                                .setTitle(R.string.audio_error_dialog_title)
-                                .setMessage(R.string.audio_error_dialog_message)
-                                .setNeutralButton(R.string.audio_error_dialog_neutral, null)
-                                .show();
+                if (keepFileName != null) {
+                    if (!fragmentMedia.isOpened()) {
+                        if (!fragmentMedia.open(keepFileName)) {
+                            new AlertDialog.Builder(AudioRecorderActivity.this)
+                                    .setIcon(R.drawable.ic_error_black_24dp)
+                                    .setTitle(R.string.audio_error_dialog_title)
+                                    .setMessage(R.string.audio_error_dialog_message)
+                                    .setNeutralButton(R.string.audio_error_dialog_neutral, null)
+                                    .show();
+                        }
+                        else
+                            buttonRecord.setEnabled(false);
                     }
-                    else
-                        buttonRecord.setEnabled(false);
-                }
-                else {
-                    fragmentMedia.close();
-                    buttonRecord.setEnabled(true);
+                    else {
+                        fragmentMedia.close();
+                        buttonRecord.setEnabled(true);
+                    }
                 }
             }
         });

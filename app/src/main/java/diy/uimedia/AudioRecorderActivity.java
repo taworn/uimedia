@@ -4,8 +4,10 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -22,7 +24,11 @@ import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
 import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
@@ -35,16 +41,22 @@ public class AudioRecorderActivity extends AppCompatActivity {
 
     private static final String TAG = AudioRecorderActivity.class.getSimpleName();
 
+    private static final int BROWSE_FILE = 100;
+
     private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd-hhmmss-", Locale.US);
 
     private ImageButton buttonRecord;
     private ImageButton buttonOpen;
+    private ImageButton buttonSave;
     private MediaPlayerFragment fragmentMedia;
 
     private String keepFileName;
     private String recordFileName;
 
     private MediaRecorder recorder = null;
+    private ProgressDialog progress = null;
+
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +70,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
 
         buttonRecord = (ImageButton) findViewById(R.id.button_record);
         buttonOpen = (ImageButton) findViewById(R.id.button_open);
+        buttonSave = (ImageButton) findViewById(R.id.button_save);
         fragmentMedia = (MediaPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_media);
 
         buttonRecord.setOnClickListener(new View.OnClickListener() {
@@ -87,6 +100,20 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 }
             }
         });
+        buttonSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (keepFileName != null) {
+                    File file = new File(keepFileName);
+                    if (file.exists()) {
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("audio/*");
+                        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                        startActivityForResult(Intent.createChooser(intent, "Select New Audio"), BROWSE_FILE);
+                    }
+                }
+            }
+        });
 
         keepFileName = null;
         recordFileName = null;
@@ -109,13 +136,29 @@ public class AudioRecorderActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
         super.onActivityResult(requestCode, resultCode, resultIntent);
+        if (requestCode == BROWSE_FILE && resultCode == RESULT_OK) {
+            try {
+                Uri uri = resultIntent.getData();
+                String path = uri.getPath();
+
+                File source = new File(keepFileName);
+                File target = new File(path);
+                InputStream in = new FileInputStream(source);
+                OutputStream out = new FileOutputStream(target);
+                byte[] buffer = new byte[4096];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+                in.close();
+                out.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -181,29 +224,33 @@ public class AudioRecorderActivity extends AppCompatActivity {
                         .setPositiveButton("Append", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String[] files = {keepFileName, recordFileName};
-                                try {
-                                    ProgressDialog progress = new ProgressDialog(AudioRecorderActivity.this);
-                                    progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                    progress.setMessage("Appending files, please wait...");
-                                    progress.setIndeterminate(true);
-                                    progress.setCancelable(false);
-                                    progress.setCanceledOnTouchOutside(false);
-                                    progress.show();
+                                progress = new ProgressDialog(AudioRecorderActivity.this);
+                                progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                                progress.setMessage("Appending files, please wait...");
+                                progress.setIndeterminate(true);
+                                progress.setCancelable(false);
+                                progress.setCanceledOnTouchOutside(false);
+                                progress.show();
+                                final String[] files = {keepFileName, recordFileName};
+                                Runnable runnable = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            appendFiles(keepFileName + ".tmp", files);
+                                            new File(recordFileName).delete();
 
-                                    appendFiles(keepFileName + ".tmp", files);
-                                    new File(recordFileName).delete();
-
-                                    File targetFile = new File(keepFileName);
-                                    targetFile.delete();
-                                    File sourceFile = new File(keepFileName + ".tmp");
-                                    sourceFile.renameTo(targetFile);
-
-                                    progress.cancel();
-                                }
-                                catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                            File targetFile = new File(keepFileName);
+                                            targetFile.delete();
+                                            File sourceFile = new File(keepFileName + ".tmp");
+                                            sourceFile.renameTo(targetFile);
+                                        }
+                                        catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                        progress.cancel();
+                                    }
+                                };
+                                handler.postDelayed(runnable, 0);
                             }
                         })
                         .setNeutralButton("Overwrite", new DialogInterface.OnClickListener() {

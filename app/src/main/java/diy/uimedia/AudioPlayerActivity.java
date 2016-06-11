@@ -45,7 +45,7 @@ public class AudioPlayerActivity extends AppCompatActivity {
                 intent.setType("audio/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Select New Audio"), BROWSE_FILE);
+                startActivityForResult(Intent.createChooser(intent, "Select An Audio"), BROWSE_FILE);
             }
         });
         buttonOpen.setOnClickListener(new View.OnClickListener() {

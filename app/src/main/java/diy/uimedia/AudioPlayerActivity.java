@@ -69,6 +69,17 @@ public class AudioPlayerActivity extends AppCompatActivity {
                 }
             }
         });
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getBoolean("opened", false))
+                buttonOpen.setImageResource(R.drawable.ic_stop_black_24dp);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean("opened", fragmentMedia.isOpened());
     }
 
     @Override

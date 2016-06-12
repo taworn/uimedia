@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/material_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="diy.uimedia.VideoRecorderActivity"
+    tools:showIn="@layout/activity_video_recorder">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/check_intent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/video_text_use_intent"/>
+
+        <ImageButton
+            android:id="@+id/button_record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/video_hint_record"
+            android:src="@drawable/ic_fiber_manual_record_black_24dp"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:id="@+id/button_open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/video_hint_open"
+            android:src="@drawable/ic_play_arrow_black_24dp"/>
+
+        <ImageButton
+            android:id="@+id/button_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/video_hint_save"
+            android:src="@drawable/ic_save_black_24dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_mic_black_24dp"
+        android:drawableStart="@drawable/ic_mic_black_24dp"
+        android:drawableTint="@color/colorTint"
+        android:gravity="center_vertical"
+        android:text="@string/video_text_hint"/>
+
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <fragment
+        android:id="@+id/fragment_media"
+        android:name="diy.uimedia.MediaPlayerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_media_player"/>
+
+</LinearLayout>

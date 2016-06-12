@@ -61,4 +61,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(this, VideoPlayerActivity.class));
     }
 
+    public void onVideoRecorderClick(View view) {
+        startActivity(new Intent(this, VideoRecorderActivity.class));
+    }
+
 }

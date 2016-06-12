@@ -42,12 +42,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-public class AudioRecorderActivity extends AppCompatActivity {
+public class VideoRecorderActivity extends AppCompatActivity {
 
-    private static final String TAG = AudioRecorderActivity.class.getSimpleName();
+    private static final String TAG = VideoRecorderActivity.class.getSimpleName();
 
     private static final int BROWSE_FILE = 100;
-    private static final int RECORD_AUDIO = 101;
+    private static final int RECORD_VIDEO = 101;
 
     private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddhhmmss", Locale.US);
 
@@ -69,7 +69,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_audio_recorder);
+        setContentView(R.layout.activity_video_recorder);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -95,11 +95,11 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 if (keepFileName != null) {
                     if (!fragmentMedia.isOpened()) {
                         if (!fragmentMedia.open(keepFileName)) {
-                            new AlertDialog.Builder(AudioRecorderActivity.this)
+                            new AlertDialog.Builder(VideoRecorderActivity.this)
                                     .setIcon(R.drawable.ic_error_black_24dp)
-                                    .setTitle(R.string.audio_error_dialog_title)
-                                    .setMessage(R.string.audio_error_dialog_message_play)
-                                    .setNeutralButton(R.string.audio_error_dialog_neutral, null)
+                                    .setTitle(R.string.video_error_dialog_title)
+                                    .setMessage(R.string.video_error_dialog_message_play)
+                                    .setNeutralButton(R.string.video_error_dialog_neutral, null)
                                     .show();
                         }
                         else {
@@ -122,9 +122,9 @@ public class AudioRecorderActivity extends AppCompatActivity {
                     File file = new File(keepFileName);
                     if (file.exists()) {
                         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("audio/*");
+                        intent.setType("video/*");
                         intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                        startActivityForResult(Intent.createChooser(intent, AudioRecorderActivity.this.getResources().getString(R.string.audio_recorder_browse)), BROWSE_FILE);
+                        startActivityForResult(Intent.createChooser(intent, VideoRecorderActivity.this.getResources().getString(R.string.video_recorder_browse)), BROWSE_FILE);
                     }
                 }
             }
@@ -175,12 +175,12 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 final String path = uri.getPath();
                 File file = new File(path);
                 if (file.exists()) {
-                    new AlertDialog.Builder(AudioRecorderActivity.this)
+                    new AlertDialog.Builder(VideoRecorderActivity.this)
                             .setIcon(R.drawable.ic_warning_black_24dp)
-                            .setTitle(R.string.audio_warning_dialog_title)
-                            .setMessage(R.string.audio_warning_dialog_message)
-                            .setNegativeButton(R.string.audio_warning_dialog_negative, null)
-                            .setPositiveButton(R.string.audio_warning_dialog_positive, new DialogInterface.OnClickListener() {
+                            .setTitle(R.string.video_warning_dialog_title)
+                            .setMessage(R.string.video_warning_dialog_message)
+                            .setNegativeButton(R.string.video_warning_dialog_negative, null)
+                            .setPositiveButton(R.string.video_warning_dialog_positive, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     try {
@@ -201,7 +201,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        else if (requestCode == RECORD_AUDIO && resultCode == RESULT_OK) {
+        else if (requestCode == RECORD_VIDEO && resultCode == RESULT_OK) {
             Uri uri = resultIntent.getData();
             ContentResolver resolver = getContentResolver();
             try {
@@ -245,11 +245,11 @@ public class AudioRecorderActivity extends AppCompatActivity {
                     buttonOpen.setEnabled(false);
                 }
                 else {
-                    new AlertDialog.Builder(AudioRecorderActivity.this)
+                    new AlertDialog.Builder(VideoRecorderActivity.this)
                             .setIcon(R.drawable.ic_error_black_24dp)
-                            .setTitle(R.string.audio_error_dialog_title)
-                            .setMessage(R.string.audio_error_dialog_message_record)
-                            .setNeutralButton(R.string.audio_error_dialog_neutral, null)
+                            .setTitle(R.string.video_error_dialog_title)
+                            .setMessage(R.string.video_error_dialog_message_record)
+                            .setNeutralButton(R.string.video_error_dialog_neutral, null)
                             .show();
                 }
             }
@@ -260,9 +260,9 @@ public class AudioRecorderActivity extends AppCompatActivity {
             }
         }
         else {
-            Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+            Intent intent = new Intent(MediaStore.Video.Media.RESOLUTION);
             intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-            startActivityForResult(intent, RECORD_AUDIO);
+            startActivityForResult(intent, RECORD_VIDEO);
         }
     }
 
@@ -272,10 +272,10 @@ public class AudioRecorderActivity extends AppCompatActivity {
             File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".tmp", path);
             if (file.canWrite()) {
                 recorder = new MediaRecorder();
-                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
                 recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
                 recorder.setOutputFile(file.getPath());
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                recorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
                 recorder.prepare();
                 recorder.start();
                 recordFileName = file.getPath();
@@ -307,13 +307,13 @@ public class AudioRecorderActivity extends AppCompatActivity {
             if (file.exists()) {
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_warning_black_24dp)
-                        .setMessage(R.string.audio_question_dialog_message)
-                        .setPositiveButton(R.string.audio_question_dialog_positive, new DialogInterface.OnClickListener() {
+                        .setMessage(R.string.video_question_dialog_message)
+                        .setPositiveButton(R.string.video_question_dialog_positive, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                progress = new ProgressDialog(AudioRecorderActivity.this);
+                                progress = new ProgressDialog(VideoRecorderActivity.this);
                                 progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                progress.setMessage(getResources().getString(R.string.audio_waiting));
+                                progress.setMessage(getResources().getString(R.string.video_waiting));
                                 progress.setIndeterminate(true);
                                 progress.setCancelable(false);
                                 progress.setCanceledOnTouchOutside(false);
@@ -339,7 +339,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
                                 handler.postDelayed(runnable, 0);
                             }
                         })
-                        .setNeutralButton(R.string.audio_question_dialog_neutral, new DialogInterface.OnClickListener() {
+                        .setNeutralButton(R.string.video_question_dialog_neutral, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 new File(keepFileName).delete();
@@ -363,17 +363,17 @@ public class AudioRecorderActivity extends AppCompatActivity {
             movies[index] = MovieCreator.build(video);
             index++;
         }
-        List<Track> audioTracks = new LinkedList<Track>();
+        List<Track> videoTracks = new LinkedList<Track>();
         for (Movie m : movies) {
             for (Track t : m.getTracks()) {
                 if (t.getHandler().equals("soun"))
-                    audioTracks.add(t);
+                    videoTracks.add(t);
             }
         }
 
         Movie result = new Movie();
-        if (audioTracks.size() > 0)
-            result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
+        if (videoTracks.size() > 0)
+            result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
 
         Container out = new DefaultMp4Builder().build(result);
         FileChannel fc = new RandomAccessFile(resultFile, "rw").getChannel();

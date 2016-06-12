@@ -232,18 +232,34 @@ public class MediaPlayerFragment extends Fragment {
         }
     }
 
+    public boolean isPlaying() {
+        return opened && player.isPlaying();
+    }
+
     public boolean isLooping() {
         return looping;
     }
 
-    public void setLooping(boolean b) {
-        looping = b;
+    public void setLooping(boolean value) {
+        looping = value;
         if (player != null)
             player.setLooping(looping);
     }
 
-    public void setSurfaceHolder(SurfaceHolder holder) {
-        this.holder = holder;
+    public int getDeltaPosition() {
+        return deltaPosition;
+    }
+
+    public void setDeltaPosition(int value) {
+        deltaPosition = value;
+    }
+
+    public SurfaceHolder getHolder() {
+        return holder;
+    }
+
+    public void setHolder(SurfaceHolder value) {
+        holder = value;
     }
 
     private void onPlayClick(View view) {
@@ -470,7 +486,7 @@ public class MediaPlayerFragment extends Fragment {
             seekBar.setMax(duration);
             seekBar.setProgress(0);
 
-            Log.d(TAG, "start playing");
+            Log.d(TAG, "resume playing");
             player.seekTo(position);
             handler.postDelayed(runnable, 0);
             this.path = path;

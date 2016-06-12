@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -35,7 +34,6 @@ public class MediaPlayerFragment extends Fragment {
     private ImageButton buttonToStart;
     private ImageButton buttonToEnd;
     private CheckBox checkLoop;
-    private SurfaceView surfaceView;
 
     // open/close flag with path name
     private String path;
@@ -48,6 +46,7 @@ public class MediaPlayerFragment extends Fragment {
     private int position;
     private int deltaPosition;
     private boolean looping;
+    private SurfaceHolder holder;
 
     // handler to control seekbar and time
     private Handler handler = new Handler();
@@ -92,7 +91,6 @@ public class MediaPlayerFragment extends Fragment {
         buttonToStart = (ImageButton) view.findViewById(R.id.button_to_start);
         buttonToEnd = (ImageButton) view.findViewById(R.id.button_to_end);
         checkLoop = (CheckBox) view.findViewById(R.id.check_loop);
-        surfaceView = null;
 
         buttonPlay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,6 +144,7 @@ public class MediaPlayerFragment extends Fragment {
         position = 0;
         deltaPosition = 15000;
         looping = false;
+        holder = null;
         return view;
     }
 
@@ -187,11 +186,19 @@ public class MediaPlayerFragment extends Fragment {
             deltaPosition = savedInstanceState.getInt("deltaPosition");
             looping = savedInstanceState.getBoolean("looping");
             if (opened) {
-                if (start(path)) {
-                    if (paused)
-                        player.pause();
-                    player.setLooping(looping);
-                    textTimeCurrent.setText(timeToText(position));
+                if (resume(path)) {
+                    Runnable runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (holder != null)
+                                player.setDisplay(holder);
+                            player.start();
+                            if (paused)
+                                player.pause();
+                            textTimeCurrent.setText(timeToText(position));
+                        }
+                    };
+                    handler.postDelayed(runnable, 1);
                 }
             }
         }
@@ -235,12 +242,8 @@ public class MediaPlayerFragment extends Fragment {
             player.setLooping(looping);
     }
 
-    public SurfaceView getSurfaceView() {
-        return surfaceView;
-    }
-
-    public void setSurfaceView(SurfaceView view) {
-        surfaceView = view;
+    public void setSurfaceHolder(SurfaceHolder holder) {
+        this.holder = holder;
     }
 
     private void onPlayClick(View view) {
@@ -357,7 +360,7 @@ public class MediaPlayerFragment extends Fragment {
         }
     }
 
-    private boolean start(final String path) {
+    private boolean start(String path) {
         try {
             Log.d(TAG, "initializes media player");
             player = new MediaPlayer();
@@ -376,9 +379,7 @@ public class MediaPlayerFragment extends Fragment {
             player.setDataSource(path);
             player.prepare();
             duration = player.getDuration();
-            if (surfaceView != null) {
-                SurfaceHolder holder = surfaceView.getHolder();
-                player.setDisplay(null);
+            if (holder != null) {
                 player.setDisplay(holder);
             }
 
@@ -409,6 +410,68 @@ public class MediaPlayerFragment extends Fragment {
             Log.d(TAG, "start playing");
             player.seekTo(position);
             player.start();
+            handler.postDelayed(runnable, 0);
+            this.path = path;
+            this.opened = true;
+            return true;
+        }
+        catch (IOException e) {
+            Log.d(TAG, "error, reset opened to false");
+            opened = false;
+            player = null;
+            paused = false;
+            duration = 0;
+            position = 0;
+            return false;
+        }
+    }
+
+    private boolean resume(String path) {
+        try {
+            Log.d(TAG, "initializes media player");
+            player = new MediaPlayer();
+            player.setLooping(looping);
+            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer player) {
+                    Log.d(TAG, "MediaPlayer.onCompletion()");
+                    if (!looping) {
+                        player.pause();
+                        paused = true;
+                        setPlayEnabled();
+                    }
+                }
+            });
+            player.setDataSource(path);
+            player.prepare();
+            duration = player.getDuration();
+
+            Log.d(TAG, "initializes SeekBar");
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                    if (player != null && b) {
+                        if (!paused)
+                            player.seekTo(i);
+                        else
+                            position = i;
+                        textTimeCurrent.setText(timeToText(i));
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
+            });
+            seekBar.setMax(duration);
+            seekBar.setProgress(0);
+
+            Log.d(TAG, "start playing");
+            player.seekTo(position);
             handler.postDelayed(runnable, 0);
             this.path = path;
             this.opened = true;

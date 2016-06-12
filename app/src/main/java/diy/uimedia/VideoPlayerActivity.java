@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
@@ -72,7 +73,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 }
             }
         });
-        fragmentMedia.setSurfaceView(surfaceView);
+
+        SurfaceHolder holder = surfaceView.getHolder();
+        fragmentMedia.setSurfaceHolder(holder);
     }
 
     @Override

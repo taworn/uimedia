@@ -15,31 +15,21 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.coremedia.iso.boxes.Container;
-import com.googlecode.mp4parser.authoring.Movie;
-import com.googlecode.mp4parser.authoring.Track;
-import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
-import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
-import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 public class VideoRecorderActivity extends AppCompatActivity {
@@ -52,19 +42,12 @@ public class VideoRecorderActivity extends AppCompatActivity {
     private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddhhmmss", Locale.US);
 
     private ImageButton buttonRecord;
-    private CheckBox checkIntent;
     private ImageButton buttonOpen;
     private ImageButton buttonSave;
-    private TextView textHint;
+    private SurfaceView surfaceView;
     private MediaPlayerFragment fragmentMedia;
 
     private String keepFileName;
-    private String recordFileName;
-
-    private MediaRecorder recorder = null;
-    private ProgressDialog progress = null;
-
-    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,10 +60,9 @@ public class VideoRecorderActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
 
         buttonRecord = (ImageButton) findViewById(R.id.button_record);
-        checkIntent = (CheckBox) findViewById(R.id.check_intent);
         buttonOpen = (ImageButton) findViewById(R.id.button_open);
         buttonSave = (ImageButton) findViewById(R.id.button_save);
-        textHint = (TextView) findViewById(R.id.text_hint);
+        surfaceView = (SurfaceView) findViewById(R.id.surface_view);
         fragmentMedia = (MediaPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_media);
 
         buttonRecord.setOnClickListener(new View.OnClickListener() {
@@ -119,21 +101,13 @@ public class VideoRecorderActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (keepFileName != null) {
-                    File file = new File(keepFileName);
-                    if (file.exists()) {
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("video/*");
-                        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                        startActivityForResult(Intent.createChooser(intent, VideoRecorderActivity.this.getResources().getString(R.string.video_recorder_browse)), BROWSE_FILE);
-                    }
                 }
             }
         });
-        textHint.setVisibility(View.INVISIBLE);
 
         keepFileName = null;
-        recordFileName = null;
-        recorder = null;
+        SurfaceHolder holder = surfaceView.getHolder();
+        fragmentMedia.setHolder(holder);
 
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean("opened", false))
@@ -149,19 +123,12 @@ public class VideoRecorderActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (recorder != null) {
-            recorder.stop();
-            recorder.release();
-        }
         if (keepFileName != null) {
+            /*
             File file = new File(keepFileName);
             if (file.exists())
                 file.delete();
-        }
-        if (recordFileName != null) {
-            File file = new File(recordFileName);
-            if (file.exists())
-                file.delete();
+                */
         }
         super.onDestroy();
     }
@@ -169,60 +136,9 @@ public class VideoRecorderActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
         super.onActivityResult(requestCode, resultCode, resultIntent);
-        if (requestCode == BROWSE_FILE && resultCode == RESULT_OK) {
-            try {
-                Uri uri = resultIntent.getData();
-                final String path = uri.getPath();
-                File file = new File(path);
-                if (file.exists()) {
-                    new AlertDialog.Builder(VideoRecorderActivity.this)
-                            .setIcon(R.drawable.ic_warning_black_24dp)
-                            .setTitle(R.string.video_warning_dialog_title)
-                            .setMessage(R.string.video_warning_dialog_message)
-                            .setNegativeButton(R.string.video_warning_dialog_negative, null)
-                            .setPositiveButton(R.string.video_warning_dialog_positive, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    try {
-                                        copyFile(path, keepFileName);
-                                    }
-                                    catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            })
-                            .show();
-                }
-                else {
-                    copyFile(path, keepFileName);
-                }
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        else if (requestCode == RECORD_VIDEO && resultCode == RESULT_OK) {
+        if (requestCode == RECORD_VIDEO && resultCode == RESULT_OK) {
             Uri uri = resultIntent.getData();
-            ContentResolver resolver = getContentResolver();
-            try {
-                File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-                File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".tmp", path);
-                InputStream in = resolver.openInputStream(uri);
-                if (in != null) {
-                    OutputStream out = new FileOutputStream(file);
-                    copyFile(out, in);
-                    out.close();
-                    in.close();
-                    recordFileName = file.getPath();
-                    afterRecordStop();
-                }
-            }
-            catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+            keepFileName = uri.getPath();
         }
     }
 
@@ -237,169 +153,18 @@ public class VideoRecorderActivity extends AppCompatActivity {
     }
 
     public void onButtonRecordClick(View view) {
-        checkIntent.setEnabled(false);
-        if (!checkIntent.isChecked()) {
-            if (recorder == null) {
-                if (recordStart()) {
-                    buttonRecord.setImageResource(R.drawable.ic_stop_black_24dp);
-                    buttonOpen.setEnabled(false);
-                }
-                else {
-                    new AlertDialog.Builder(VideoRecorderActivity.this)
-                            .setIcon(R.drawable.ic_error_black_24dp)
-                            .setTitle(R.string.video_error_dialog_title)
-                            .setMessage(R.string.video_error_dialog_message_record)
-                            .setNeutralButton(R.string.video_error_dialog_neutral, null)
-                            .show();
-                }
-            }
-            else {
-                buttonOpen.setEnabled(true);
-                buttonRecord.setImageResource(R.drawable.ic_fiber_manual_record_black_24dp);
-                recordStop();
-            }
-        }
-        else {
-            Intent intent = new Intent(MediaStore.Video.Media.RESOLUTION);
+        try {
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+            File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".mp4", path);
+            Uri uri = Uri.fromFile(file);
+            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
             intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
             startActivityForResult(intent, RECORD_VIDEO);
         }
-    }
-
-    private boolean recordStart() {
-        try {
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-            File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".tmp", path);
-            if (file.canWrite()) {
-                recorder = new MediaRecorder();
-                recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                recorder.setOutputFile(file.getPath());
-                recorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
-                recorder.prepare();
-                recorder.start();
-                recordFileName = file.getPath();
-                textHint.setVisibility(View.VISIBLE);
-                return true;
-            }
-        }
         catch (IOException e) {
-            if (recorder != null) {
-                recorder.stop();
-                recorder.release();
-                recorder = null;
-            }
-        }
-        return false;
-    }
-
-    private void recordStop() {
-        recorder.stop();
-        recorder.release();
-        recorder = null;
-        textHint.setVisibility(View.INVISIBLE);
-        afterRecordStop();
-    }
-
-    private void afterRecordStop() {
-        if (keepFileName != null) {
-            File file = new File(keepFileName);
-            if (file.exists()) {
-                new AlertDialog.Builder(this)
-                        .setIcon(R.drawable.ic_warning_black_24dp)
-                        .setMessage(R.string.video_question_dialog_message)
-                        .setPositiveButton(R.string.video_question_dialog_positive, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                progress = new ProgressDialog(VideoRecorderActivity.this);
-                                progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                progress.setMessage(getResources().getString(R.string.video_waiting));
-                                progress.setIndeterminate(true);
-                                progress.setCancelable(false);
-                                progress.setCanceledOnTouchOutside(false);
-                                progress.show();
-                                final String[] files = {keepFileName, recordFileName};
-                                Runnable runnable = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            appendFiles(keepFileName + ".tmp", files);
-                                            new File(recordFileName).delete();
-                                            File targetFile = new File(keepFileName);
-                                            targetFile.delete();
-                                            File sourceFile = new File(keepFileName + ".tmp");
-                                            sourceFile.renameTo(targetFile);
-                                        }
-                                        catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                        progress.cancel();
-                                    }
-                                };
-                                handler.postDelayed(runnable, 0);
-                            }
-                        })
-                        .setNeutralButton(R.string.video_question_dialog_neutral, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                new File(keepFileName).delete();
-                                keepFileName = recordFileName;
-                            }
-                        })
-                        .show();
-            }
-            else
-                keepFileName = recordFileName;
-        }
-        else
-            keepFileName = recordFileName;
-    }
-
-    private void appendFiles(String resultFile, String[] files) throws IOException {
-        Movie[] movies = new Movie[files.length];
-
-        int index = 0;
-        for (String video : files) {
-            movies[index] = MovieCreator.build(video);
-            index++;
-        }
-        List<Track> videoTracks = new LinkedList<Track>();
-        for (Movie m : movies) {
-            for (Track t : m.getTracks()) {
-                if (t.getHandler().equals("soun"))
-                    videoTracks.add(t);
-            }
-        }
-
-        Movie result = new Movie();
-        if (videoTracks.size() > 0)
-            result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
-
-        Container out = new DefaultMp4Builder().build(result);
-        FileChannel fc = new RandomAccessFile(resultFile, "rw").getChannel();
-        out.writeContainer(fc);
-        fc.close();
-    }
-
-    private void copyFile(String target, String source) throws IOException {
-        File sourceFile = new File(source);
-        File targetFile = new File(target);
-        InputStream sourceStream = new FileInputStream(sourceFile);
-        OutputStream targetStream = new FileOutputStream(targetFile);
-        byte[] buffer = new byte[4096];
-        int length;
-        while ((length = sourceStream.read(buffer)) > 0) {
-            targetStream.write(buffer, 0, length);
-        }
-        sourceStream.close();
-        targetStream.close();
-    }
-
-    private void copyFile(OutputStream targetStream, InputStream sourceStream) throws IOException {
-        byte[] buffer = new byte[4096];
-        int length;
-        while ((length = sourceStream.read(buffer)) > 0) {
-            targetStream.write(buffer, 0, length);
+            e.printStackTrace();
         }
     }
 

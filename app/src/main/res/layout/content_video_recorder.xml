@@ -16,19 +16,12 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <CheckBox
-            android:id="@+id/check_intent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/video_text_use_intent"/>
-
         <ImageButton
             android:id="@+id/button_record"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/video_hint_record"
-            android:src="@drawable/ic_fiber_manual_record_black_24dp"/>
+            android:src="@drawable/ic_videocam_black_24dp"/>
 
         <View
             android:layout_width="0dp"
@@ -50,16 +43,6 @@
             android:src="@drawable/ic_save_black_24dp"/>
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_hint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_mic_black_24dp"
-        android:drawableStart="@drawable/ic_mic_black_24dp"
-        android:drawableTint="@color/colorTint"
-        android:gravity="center_vertical"
-        android:text="@string/video_text_hint"/>
 
     <SurfaceView
         android:id="@+id/surface_view"

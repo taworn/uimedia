@@ -57,4 +57,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(this, AudioRecorderActivity.class));
     }
 
+    public void onVideoPlayerClick(View view) {
+        startActivity(new Intent(this, VideoPlayerActivity.class));
+    }
+
 }

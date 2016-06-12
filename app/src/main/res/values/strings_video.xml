@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="video_hint_file">Browse file</string>
+    <string name="video_hint_browse">Browse</string>
+    <string name="video_hint_open">Open/Close</string>
+    <string name="video_hint_record">Record</string>
+    <string name="video_hint_save">Save</string>
+
+    <string name="video_text_use_intent">Use intent</string>
+    <string name="video_text_hint">Recording&#8230;</string>
+
+    <string name="video_player_browse">Select a video</string>
+    <string name="video_recorder_browse">Save to</string>
+
+    <string name="video_error_dialog_title">Error</string>
+    <string name="video_error_dialog_message_play">Cannot play.</string>
+    <string name="video_error_dialog_message_record">Cannot record.</string>
+    <string name="video_error_dialog_neutral">Close</string>
+
+    <string name="video_warning_dialog_title">Warning</string>
+    <string name="video_warning_dialog_message">Save to overwrite this file, are you sure?</string>
+    <string name="video_warning_dialog_negative">No</string>
+    <string name="video_warning_dialog_positive">Yes</string>
+
+    <string name="video_question_dialog_title">Question</string>
+    <string name="video_question_dialog_message">Overwrite or append file?</string>
+    <string name="video_question_dialog_neutral">Overwrite</string>
+    <string name="video_question_dialog_positive">Append</string>
+
+    <string name="video_waiting">Appending file, please wait&#8230;</string>
+
+</resources>

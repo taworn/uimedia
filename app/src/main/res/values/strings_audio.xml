@@ -4,6 +4,8 @@
     <string name="audio_hint_file">Browse file</string>
     <string name="audio_hint_browse">Browse</string>
     <string name="audio_hint_open">Open/Close</string>
+    <string name="audio_hint_record">Record</string>
+    <string name="audio_hint_save">Save</string>
 
     <string name="audio_text_use_intent">Use intent</string>
     <string name="audio_text_hint">Recording&#8230;</string>
@@ -12,7 +14,8 @@
     <string name="audio_recorder_browse">Save to</string>
 
     <string name="audio_error_dialog_title">Error</string>
-    <string name="audio_error_dialog_message">Cannot play.</string>
+    <string name="audio_error_dialog_message_play">Cannot play.</string>
+    <string name="audio_error_dialog_message_record">Cannot record.</string>
     <string name="audio_error_dialog_neutral">Close</string>
 
     <string name="audio_warning_dialog_title">Warning</string>

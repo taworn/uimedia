@@ -1,6 +1,7 @@
 package diy.uimedia;
 
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaRecorder;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +29,7 @@ import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +47,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
     private static final String TAG = AudioRecorderActivity.class.getSimpleName();
 
     private static final int BROWSE_FILE = 100;
+    private static final int RECORD_SOUND = 101;
 
     private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddhhmmss", Locale.US);
 
@@ -94,7 +98,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
                             new AlertDialog.Builder(AudioRecorderActivity.this)
                                     .setIcon(R.drawable.ic_error_black_24dp)
                                     .setTitle(R.string.audio_error_dialog_title)
-                                    .setMessage(R.string.audio_error_dialog_message)
+                                    .setMessage(R.string.audio_error_dialog_message_play)
                                     .setNeutralButton(R.string.audio_error_dialog_neutral, null)
                                     .show();
                         }
@@ -186,6 +190,29 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+        else if (requestCode == RECORD_SOUND && resultCode == RESULT_OK) {
+            Uri uri = resultIntent.getData();
+            ContentResolver resolver = getContentResolver();
+            try {
+                File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+                File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".tmp", path);
+                InputStream in = resolver.openInputStream(uri);
+                if (in != null) {
+                    OutputStream out = new FileOutputStream(file);
+                    copyFile(out, in);
+                    out.close();
+                    in.close();
+                    recordFileName = file.getPath();
+                    afterRecordStop();
+                }
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -199,11 +226,20 @@ public class AudioRecorderActivity extends AppCompatActivity {
     }
 
     public void onButtonRecordClick(View view) {
+        checkIntent.setEnabled(false);
         if (!checkIntent.isChecked()) {
             if (recorder == null) {
                 if (recordStart()) {
                     buttonRecord.setImageResource(R.drawable.ic_stop_black_24dp);
                     buttonOpen.setEnabled(false);
+                }
+                else {
+                    new AlertDialog.Builder(AudioRecorderActivity.this)
+                            .setIcon(R.drawable.ic_error_black_24dp)
+                            .setTitle(R.string.audio_error_dialog_title)
+                            .setMessage(R.string.audio_error_dialog_message_record)
+                            .setNeutralButton(R.string.audio_error_dialog_neutral, null)
+                            .show();
                 }
             }
             else {
@@ -213,9 +249,9 @@ public class AudioRecorderActivity extends AppCompatActivity {
             }
         }
         else {
-            //
-            // Use intent
-            //
+            Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            startActivityForResult(intent, RECORD_SOUND);
         }
     }
 
@@ -235,12 +271,13 @@ public class AudioRecorderActivity extends AppCompatActivity {
                 textHint.setVisibility(View.VISIBLE);
                 return true;
             }
-            else {
-                // cannot write file
-            }
         }
         catch (IOException e) {
-            // error e
+            if (recorder != null) {
+                recorder.stop();
+                recorder.release();
+                recorder = null;
+            }
         }
         return false;
     }
@@ -250,6 +287,10 @@ public class AudioRecorderActivity extends AppCompatActivity {
         recorder.release();
         recorder = null;
         textHint.setVisibility(View.INVISIBLE);
+        afterRecordStop();
+    }
+
+    private void afterRecordStop() {
         if (keepFileName != null) {
             File file = new File(keepFileName);
             if (file.exists()) {
@@ -312,21 +353,16 @@ public class AudioRecorderActivity extends AppCompatActivity {
             index++;
         }
         List<Track> audioTracks = new LinkedList<Track>();
-        //List<Track> videoTracks = new LinkedList<Track>();
         for (Movie m : movies) {
             for (Track t : m.getTracks()) {
                 if (t.getHandler().equals("soun"))
                     audioTracks.add(t);
-                //if (t.getHandler().equals("vide"))
-                //videoTracks.add(t);
             }
         }
 
         Movie result = new Movie();
         if (audioTracks.size() > 0)
             result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
-        //if (videoTracks.size() > 0)
-        //result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
 
         Container out = new DefaultMp4Builder().build(result);
         FileChannel fc = new RandomAccessFile(resultFile, "rw").getChannel();
@@ -346,6 +382,14 @@ public class AudioRecorderActivity extends AppCompatActivity {
         }
         sourceStream.close();
         targetStream.close();
+    }
+
+    private void copyFile(OutputStream targetStream, InputStream sourceStream) throws IOException {
+        byte[] buffer = new byte[4096];
+        int length;
+        while ((length = sourceStream.read(buffer)) > 0) {
+            targetStream.write(buffer, 0, length);
+        }
     }
 
 }

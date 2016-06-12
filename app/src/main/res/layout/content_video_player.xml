@@ -8,60 +8,41 @@
     android:orientation="vertical"
     android:padding="@dimen/material_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="diy.uimedia.AudioRecorderActivity"
-    tools:showIn="@layout/activity_audio_recorder">
+    tools:context="diy.uimedia.VideoPlayerActivity"
+    tools:showIn="@layout/activity_video_player">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <CheckBox
-            android:id="@+id/check_intent"
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/edit_file"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/audio_text_use_intent"/>
+            android:layout_weight="1"
+            android:hint="@string/video_hint_file"
+            android:singleLine="true"
+            android:textSize="@dimen/material_text"/>
 
         <ImageButton
-            android:id="@+id/button_record"
+            android:id="@+id/button_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/audio_hint_record"
-            android:src="@drawable/ic_fiber_manual_record_black_24dp"/>
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:contentDescription="@string/video_hint_browse"
+            android:src="@drawable/ic_folder_open_black_24dp"/>
 
         <ImageButton
             android:id="@+id/button_open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/audio_hint_open"
+            android:contentDescription="@string/video_hint_open"
             android:src="@drawable/ic_play_arrow_black_24dp"/>
-
-        <ImageButton
-            android:id="@+id/button_save"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/audio_hint_save"
-            android:src="@drawable/ic_save_black_24dp"/>
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/text_hint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_mic_black_24dp"
-        android:drawableStart="@drawable/ic_mic_black_24dp"
-        android:drawableTint="@color/colorTint"
-        android:gravity="center_vertical"
-        android:text="@string/audio_text_hint"/>
-
-    <ImageView
+    <SurfaceView
+        android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>

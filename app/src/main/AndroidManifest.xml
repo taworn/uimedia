@@ -36,6 +36,12 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
+        <activity
+            android:name=".VideoPlayerActivity"
+            android:label="@string/title_activity_video_player"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
     </application>
 
 </manifest>

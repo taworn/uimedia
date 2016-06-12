@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -33,6 +35,7 @@ public class MediaPlayerFragment extends Fragment {
     private ImageButton buttonToStart;
     private ImageButton buttonToEnd;
     private CheckBox checkLoop;
+    private SurfaceView surfaceView;
 
     // open/close flag with path name
     private String path;
@@ -89,6 +92,7 @@ public class MediaPlayerFragment extends Fragment {
         buttonToStart = (ImageButton) view.findViewById(R.id.button_to_start);
         buttonToEnd = (ImageButton) view.findViewById(R.id.button_to_end);
         checkLoop = (CheckBox) view.findViewById(R.id.check_loop);
+        surfaceView = null;
 
         buttonPlay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -231,6 +235,14 @@ public class MediaPlayerFragment extends Fragment {
             player.setLooping(looping);
     }
 
+    public SurfaceView getSurfaceView() {
+        return surfaceView;
+    }
+
+    public void setSurfaceView(SurfaceView view) {
+        surfaceView = view;
+    }
+
     private void onPlayClick(View view) {
         if (opened) {
             if (!paused) {
@@ -364,6 +376,11 @@ public class MediaPlayerFragment extends Fragment {
             player.setDataSource(path);
             player.prepare();
             duration = player.getDuration();
+            if (surfaceView != null) {
+                SurfaceHolder holder = surfaceView.getHolder();
+                player.setDisplay(null);
+                player.setDisplay(holder);
+            }
 
             Log.d(TAG, "initializes SeekBar");
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

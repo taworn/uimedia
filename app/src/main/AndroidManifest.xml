@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="diy.uimedia">
+    package="diy.uimedia"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -51,6 +51,7 @@
         <activity
             android:name=".VideoRecorderActivity"
             android:label="@string/title_activity_video_recorder"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 

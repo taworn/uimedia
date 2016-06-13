@@ -147,7 +147,6 @@ public class VideoRecorderActivity extends AppCompatActivity {
                                 File oldFile = new File(keepFileName);
                                 oldFile.renameTo(file);
                                 fragmentMedia.close();
-                                fragmentMedia.open(file.getPath());
                                 keepFileName = null;
                             }
                         })
@@ -157,7 +156,6 @@ public class VideoRecorderActivity extends AppCompatActivity {
                 File oldFile = new File(keepFileName);
                 oldFile.renameTo(file);
                 fragmentMedia.close();
-                fragmentMedia.open(file.getPath());
                 keepFileName = null;
             }
         }

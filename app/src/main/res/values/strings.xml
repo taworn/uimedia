@@ -19,6 +19,6 @@
     <string name="title_activity_video_player">Video Player</string>
     <string name="title_activity_video_recorder">Video Recorder</string>
 
-    <string name="version">0.0.5</string>
+    <string name="version">0.1.0</string>
 
 </resources>

@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -205,17 +206,19 @@ public class AudioRecorderActivity extends AppCompatActivity {
             Uri uri = resultIntent.getData();
             ContentResolver resolver = getContentResolver();
             try {
+                String[] columns = {MediaStore.Audio.Media.DATA};
+                Cursor cursor = getContentResolver().query(uri, columns, null, null, null);
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(columns[0]);
+                String audioPath = cursor.getString(columnIndex);
+                cursor.close();
+
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
                 File file = File.createTempFile("uimedia-" + formatter.format(new Date()), ".tmp", path);
-                InputStream in = resolver.openInputStream(uri);
-                if (in != null) {
-                    OutputStream out = new FileOutputStream(file);
-                    copyFile(out, in);
-                    out.close();
-                    in.close();
-                    recordFileName = file.getPath();
-                    afterRecordStop();
-                }
+                File sourceFile = new File(audioPath);
+                sourceFile.renameTo(file);
+                recordFileName = file.getPath();
+                afterRecordStop();
             }
             catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -357,7 +360,6 @@ public class AudioRecorderActivity extends AppCompatActivity {
 
     private void appendFiles(String resultFile, String[] files) throws IOException {
         Movie[] movies = new Movie[files.length];
-
         int index = 0;
         for (String video : files) {
             movies[index] = MovieCreator.build(video);
@@ -393,14 +395,6 @@ public class AudioRecorderActivity extends AppCompatActivity {
         }
         sourceStream.close();
         targetStream.close();
-    }
-
-    private void copyFile(OutputStream targetStream, InputStream sourceStream) throws IOException {
-        byte[] buffer = new byte[4096];
-        int length;
-        while ((length = sourceStream.read(buffer)) > 0) {
-            targetStream.write(buffer, 0, length);
-        }
     }
 
 }

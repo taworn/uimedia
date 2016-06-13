@@ -1,14 +1,10 @@
 package diy.uimedia;
 
-import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -18,16 +14,10 @@ import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -100,7 +90,14 @@ public class VideoRecorderActivity extends AppCompatActivity {
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (keepFileName != null) {
+                if (keepFileName != null && !fragmentMedia.isOpened()) {
+                    File file = new File(keepFileName);
+                    if (file.exists()) {
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("video/*");
+                        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                        startActivityForResult(Intent.createChooser(intent, VideoRecorderActivity.this.getResources().getString(R.string.video_recorder_browse)), BROWSE_FILE);
+                    }
                 }
             }
         });
@@ -124,11 +121,9 @@ public class VideoRecorderActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (keepFileName != null) {
-            /*
             File file = new File(keepFileName);
             if (file.exists())
                 file.delete();
-                */
         }
         super.onDestroy();
     }
@@ -136,7 +131,37 @@ public class VideoRecorderActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
         super.onActivityResult(requestCode, resultCode, resultIntent);
-        if (requestCode == RECORD_VIDEO && resultCode == RESULT_OK) {
+        if (requestCode == BROWSE_FILE && resultCode == RESULT_OK) {
+            Uri uri = resultIntent.getData();
+            final String path = uri.getPath();
+            final File file = new File(path);
+            if (file.exists()) {
+                new AlertDialog.Builder(VideoRecorderActivity.this)
+                        .setIcon(R.drawable.ic_warning_black_24dp)
+                        .setTitle(R.string.audio_warning_dialog_title)
+                        .setMessage(R.string.audio_warning_dialog_message)
+                        .setNegativeButton(R.string.audio_warning_dialog_negative, null)
+                        .setPositiveButton(R.string.audio_warning_dialog_positive, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                File oldFile = new File(keepFileName);
+                                oldFile.renameTo(file);
+                                fragmentMedia.close();
+                                fragmentMedia.open(file.getPath());
+                                keepFileName = null;
+                            }
+                        })
+                        .show();
+            }
+            else {
+                File oldFile = new File(keepFileName);
+                oldFile.renameTo(file);
+                fragmentMedia.close();
+                fragmentMedia.open(file.getPath());
+                keepFileName = null;
+            }
+        }
+        else if (requestCode == RECORD_VIDEO && resultCode == RESULT_OK) {
             Uri uri = resultIntent.getData();
             keepFileName = uri.getPath();
         }

@@ -50,7 +50,7 @@ public class AudioRecorderActivity extends AppCompatActivity {
     private static final int BROWSE_FILE = 100;
     private static final int RECORD_AUDIO = 101;
 
-    private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddhhmmss", Locale.US);
+    private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
 
     private ImageButton buttonRecord;
     private CheckBox checkIntent;

@@ -2,7 +2,6 @@
 
     <string name="app_name">UI Media</string>
 
-    <string name="action_settings">Settings</string>
     <string name="action_about">About</string>
 
     <string name="button_audio_player">Audio Player</string>
@@ -19,6 +18,6 @@
     <string name="title_activity_video_player">Video Player</string>
     <string name="title_activity_video_recorder">Video Recorder</string>
 
-    <string name="version">0.1.0</string>
+    <string name="version">0.1.1</string>
 
 </resources>
